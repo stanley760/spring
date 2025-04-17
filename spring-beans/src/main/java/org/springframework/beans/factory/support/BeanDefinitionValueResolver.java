@@ -131,7 +131,9 @@ public class BeanDefinitionValueResolver {
 	public Object resolveValueIfNecessary(Object argName, @Nullable Object value) {
 		// We must check each value to see whether it requires a runtime reference
 		// to another bean to be resolved.
+		// 检查每个值，看看它是否需要一个运行时引用来解析另一个bean
 		if (value instanceof RuntimeBeanReference ref) {
+			// ☆ 对RuntimeBeanReference类型注入到resolveReference中
 			return resolveReference(argName, ref);
 		}
 		else if (value instanceof RuntimeBeanNameReference ref) {
@@ -163,6 +165,7 @@ public class BeanDefinitionValueResolver {
 			}
 			return result;
 		}
+		// 对ManagedArray进行解析
 		else if (value instanceof ManagedArray managedArray) {
 			// May need to resolve contained runtime references.
 			Class<?> elementType = managedArray.resolvedElementType;
@@ -186,18 +189,22 @@ public class BeanDefinitionValueResolver {
 			}
 			return resolveManagedArray(argName, (List<?>) value, elementType);
 		}
+		// 对ManagedList进行解析
 		else if (value instanceof ManagedList<?> managedList) {
 			// May need to resolve contained runtime references.
 			return resolveManagedList(argName, managedList);
 		}
+		// 对ManagedSet进行解析
 		else if (value instanceof ManagedSet<?> managedSet) {
 			// May need to resolve contained runtime references.
 			return resolveManagedSet(argName, managedSet);
 		}
+		// 对ManagedMap进行解析
 		else if (value instanceof ManagedMap<?, ?> managedMap) {
 			// May need to resolve contained runtime references.
 			return resolveManagedMap(argName, managedMap);
 		}
+		// 对ManagedProperties进行解析
 		else if (value instanceof ManagedProperties original) {
 			// Properties original = managedProperties;
 			Properties copy = new Properties();
@@ -217,6 +224,7 @@ public class BeanDefinitionValueResolver {
 			});
 			return copy;
 		}
+		// 对TypedStringValue进行解析
 		else if (value instanceof TypedStringValue typedStringValue) {
 			// Convert value to target type here.
 			Object valueObject = evaluate(typedStringValue);
@@ -338,6 +346,7 @@ public class BeanDefinitionValueResolver {
 		try {
 			Object bean;
 			Class<?> beanType = ref.getBeanType();
+			// 如果ref是在双亲IOC容器中，那就到双亲IOC容器中获取
 			if (ref.isToParent()) {
 				BeanFactory parent = this.beanFactory.getParentBeanFactory();
 				if (parent == null) {
@@ -350,6 +359,7 @@ public class BeanDefinitionValueResolver {
 					bean = parent.getBean(beanType);
 				}
 				else {
+					// ref.getBeanName()在载入BeanDefinition时根据配置生成的
 					bean = parent.getBean(String.valueOf(doEvaluate(ref.getBeanName())));
 				}
 			}
@@ -361,7 +371,10 @@ public class BeanDefinitionValueResolver {
 					resolvedName = namedBean.getBeanName();
 				}
 				else {
+					// ref.getBeanName()在载入BeanDefinition时根据配置生成的
 					resolvedName = String.valueOf(doEvaluate(ref.getBeanName()));
+					// 在当前IOC容器中获取Bean，这里会触发一个getBean的过程，如果依赖注入没有发生，
+					// 这里会触发相应的依赖注入的发生
 					bean = this.beanFactory.getBean(resolvedName);
 				}
 				this.beanFactory.registerDependentBean(resolvedName, this.beanName);

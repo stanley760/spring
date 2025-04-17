@@ -80,14 +80,18 @@ final class PostProcessorRegistrationDelegate {
 		// https://github.com/spring-projects/spring-framework/issues?q=PostProcessorRegistrationDelegate+is%3Aclosed+label%3A%22status%3A+declined%22
 
 		// Invoke BeanDefinitionRegistryPostProcessors first, if any.
+		// 1、首先调用BeanDefinitionRegistryPostProcessors
 		Set<String> processedBeans = new HashSet<>();
-
+		// 1.判断beanFactory是否为BeanDefinitionRegistry，
+		// beanFactory为DefaultListableBeanFactory,而DefaultListableBeanFactory实现了BeanDefinitionRegistry接口，
+		// 因此这边为true
 		if (beanFactory instanceof BeanDefinitionRegistry registry) {
 			List<BeanFactoryPostProcessor> regularPostProcessors = new ArrayList<>();
 			List<BeanDefinitionRegistryPostProcessor> registryProcessors = new ArrayList<>();
 
 			for (BeanFactoryPostProcessor postProcessor : beanFactoryPostProcessors) {
 				if (postProcessor instanceof BeanDefinitionRegistryPostProcessor registryProcessor) {
+
 					registryProcessor.postProcessBeanDefinitionRegistry(registry);
 					registryProcessors.add(registryProcessor);
 				}
@@ -148,6 +152,7 @@ final class PostProcessorRegistrationDelegate {
 			}
 
 			// Now, invoke the postProcessBeanFactory callback of all processors handled so far.
+			// 调用回调函数postProcessBeanFactory.
 			invokeBeanFactoryPostProcessors(registryProcessors, beanFactory);
 			invokeBeanFactoryPostProcessors(regularPostProcessors, beanFactory);
 		}
@@ -233,6 +238,7 @@ final class PostProcessorRegistrationDelegate {
 
 		// Separate between BeanPostProcessors that implement PriorityOrdered,
 		// Ordered, and the rest.
+		// 使用PriorityOrdered来保证顺序
 		List<BeanPostProcessor> priorityOrderedPostProcessors = new ArrayList<>();
 		List<BeanPostProcessor> internalPostProcessors = new ArrayList<>();
 		List<String> orderedPostProcessorNames = new ArrayList<>();
@@ -254,10 +260,12 @@ final class PostProcessorRegistrationDelegate {
 		}
 
 		// First, register the BeanPostProcessors that implement PriorityOrdered.
+		//第一步，注册所有实现了PriorityOrdered的BeanPostProcessor
 		sortPostProcessors(priorityOrderedPostProcessors, beanFactory);
 		registerBeanPostProcessors(beanFactory, priorityOrderedPostProcessors);
 
 		// Next, register the BeanPostProcessors that implement Ordered.
+		//注册实现了Ordered的BeanPostProcessor
 		List<BeanPostProcessor> orderedPostProcessors = new ArrayList<>(orderedPostProcessorNames.size());
 		for (String ppName : orderedPostProcessorNames) {
 			BeanPostProcessor pp = beanFactory.getBean(ppName, BeanPostProcessor.class);
@@ -270,6 +278,7 @@ final class PostProcessorRegistrationDelegate {
 		registerBeanPostProcessors(beanFactory, orderedPostProcessors);
 
 		// Now, register all regular BeanPostProcessors.
+		//注册所有的无序的BeanPostProcessor
 		List<BeanPostProcessor> nonOrderedPostProcessors = new ArrayList<>(nonOrderedPostProcessorNames.size());
 		for (String ppName : nonOrderedPostProcessorNames) {
 			BeanPostProcessor pp = beanFactory.getBean(ppName, BeanPostProcessor.class);
@@ -281,6 +290,7 @@ final class PostProcessorRegistrationDelegate {
 		registerBeanPostProcessors(beanFactory, nonOrderedPostProcessors);
 
 		// Finally, re-register all internal BeanPostProcessors.
+		//注册所有的内部BeanFactoryProcessor
 		sortPostProcessors(internalPostProcessors, beanFactory);
 		registerBeanPostProcessors(beanFactory, internalPostProcessors);
 
@@ -357,6 +367,7 @@ final class PostProcessorRegistrationDelegate {
 		for (BeanFactoryPostProcessor postProcessor : postProcessors) {
 			StartupStep postProcessBeanFactory = beanFactory.getApplicationStartup().start("spring.context.bean-factory.post-process")
 					.tag("postProcessor", postProcessor::toString);
+			// 遍历后置处理器调用postProcessBeanFactory.
 			postProcessor.postProcessBeanFactory(beanFactory);
 			postProcessBeanFactory.end();
 		}
